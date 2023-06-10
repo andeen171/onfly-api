@@ -13,6 +13,10 @@ return new class extends Migration
     {
         Schema::create('expenses', function (Blueprint $table) {
             $table->id();
+            $table->string('description');
+            $table->date('date');
+            $table->decimal('value', 8, 2);
+            $table->foreignId('user_id')->constrained();
             $table->timestamps();
         });
     }
