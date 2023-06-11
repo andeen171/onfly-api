@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\ExpenseResource;
 use App\Models\Expense;
 use Illuminate\Http\Request;
+use App\Notifications\ExpenseUpdated;
+use App\Notifications\ExpenseCreated;
 
 class ExpenseController extends Controller
 {
@@ -14,8 +16,7 @@ class ExpenseController extends Controller
      */
     public function index()
     {
-        // Return all expenses associated with the authenticated user.
-        // return ExpenseResource::collection(auth()->user()->expenses);
+        $this->authorize('viewAny', Expense::class);
         return ExpenseResource::collection(Expense::all());
     }
 
@@ -30,9 +31,14 @@ class ExpenseController extends Controller
             'value' => 'required|numeric|min:0',
         ]);
 
-        $expense = Expense::create($validatedData);
+        $this->authorize('create', Expense::class);
+
         // Associate the expense with the authenticated user.
-        // $expense->user()->associate(auth()->user());
+        $validatedData['user_id'] = auth()->id();
+
+        $expense = Expense::create($validatedData);
+
+        auth()->user()->notify(new ExpenseCreated($expense));
         return new ExpenseResource($expense);
     }
 
@@ -41,6 +47,7 @@ class ExpenseController extends Controller
      */
     public function show(Expense $expense)
     {
+        $this->authorize('view', $expense);
         return new ExpenseResource($expense);
     }
 
@@ -55,7 +62,10 @@ class ExpenseController extends Controller
             'value' => 'required|numeric|min:0',
         ]);
 
+        $this->authorize('update', $expense);
+
         $expense->update($validatedData);
+        auth()->user()->notify(new ExpenseUpdated($expense));
         return new ExpenseResource($expense);
     }
 
@@ -64,6 +74,7 @@ class ExpenseController extends Controller
      */
     public function destroy(Expense $expense)
     {
+        $this->authorize('delete', $expense);
         $expense->delete();
         return response()->noContent();
     }
