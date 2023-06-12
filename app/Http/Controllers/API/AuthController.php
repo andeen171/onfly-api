@@ -2,15 +2,16 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
-use App\Models\User;
 use App\Notifications\UserRegistered;
 
 class AuthController extends Controller
 {
-    public function register(Request $request)
+    public function register(Request $request): JsonResponse
     {
         $attr = $request->validate([
             'name' => 'required|string',
@@ -24,12 +25,12 @@ class AuthController extends Controller
             'password' => bcrypt($attr['password']),
         ]);
 
-        $user->notify(new UserRegistered($user));
+        $user->notify(new UserRegistered());
 
         return $this->login($request);
     }
 
-    public function login(Request $request)
+    public function login(Request $request): JsonResponse
     {
         $request->validate([
             'email' => 'required|email',
@@ -48,7 +49,7 @@ class AuthController extends Controller
         return response()->json(['token' => $token]);
     }
 
-    public function user(Request $request)
+    public function user(Request $request): JsonResponse
     {
         return response()->json([
             'user' => $request->user()
@@ -56,7 +57,7 @@ class AuthController extends Controller
     }
 
 
-    public function logout(Request $request)
+    public function logout(Request $request): array
     {
         auth()->user()->tokens()->delete();
 
