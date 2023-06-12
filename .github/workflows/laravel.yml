@@ -18,14 +18,14 @@ jobs:
       uses: shivammathur/setup-php@v2
       with:
         php-version: '8.2'
-        extensions: mbstring, dom, fileinfo, mysql
+        extensions: mbstring, dom, fileinfo, mysql, sqlite
         tools: composer:v2
 
     - name: Install Dependencies
       run: composer install -q --no-ansi --no-interaction --no-scripts --no-suggest --no-progress --prefer-dist
 
     - name: Copy .env
-      run: php -r "file_exists('.env') || copy('.env.example', '.env');"
+      run: php -r "file_exists('.env') || copy('.env.ci', '.env');"
 
     - name: Generate key
       run: php artisan key:generate
@@ -38,8 +38,8 @@ jobs:
         mkdir -p database
         touch database/database.sqlite
 
+    - name: Run migrations
+      run: php artisan migrate
+
     - name: Execute tests (Unit and Feature tests) via PHPUnit
-      env:
-        DB_CONNECTION: sqlite
-        DB_DATABASE: database/database.sqlite
       run: vendor/bin/phpunit
