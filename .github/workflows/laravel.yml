@@ -28,5 +28,8 @@ jobs:
           cp .env.ci .env
           php artisan key:generate
 
+      - name: Run migrations
+        run: php artisan migrate --force
+
       - name: Run tests
         run: php artisan test
