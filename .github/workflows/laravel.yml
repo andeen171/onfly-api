@@ -26,6 +26,7 @@ jobs:
       - name: Prepare Laravel Application
         run: |
           cp .env.ci .env
+          touch database/testing.sqlite
           php artisan key:generate
 
       - name: Run migrations
