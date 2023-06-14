@@ -10,6 +10,7 @@ use Illuminate\Foundation\Testing\WithFaker;
 
 use App\Models\User;
 use App\Notifications;
+use Carbon\Carbon;
 
 class ExpenseTest extends TestCase
 {
@@ -90,7 +91,12 @@ class ExpenseTest extends TestCase
         $response = $this->actingAs($user)->postJson(route('expenses.store'), $expenseData);
 
         $response->assertStatus(201);
-        $this->assertDatabaseHas('expenses', $expenseData);
+        $this->assertDatabaseHas('expenses', [
+            'description' => $expenseData['description'],
+            'date' => Carbon::parse($expenseData['date']),
+            'value' => $expenseData['value'],
+            'user_id' => $user->id,
+        ]);
         Notification::assertSentTo($user, Notifications\ExpenseCreated::class);
 
         // Test input validation
@@ -135,7 +141,12 @@ class ExpenseTest extends TestCase
         $response = $this->actingAs($user)->putJson(route('expenses.update', $expense->id), $expenseData);
 
         $response->assertStatus(200);
-        $this->assertDatabaseHas('expenses', $expenseData);
+        $this->assertDatabaseHas('expenses', [
+            'description' => $expenseData['description'],
+            'date' => Carbon::parse($expenseData['date']),
+            'value' => $expenseData['value'],
+            'user_id' => $user->id,
+        ]);
         Notification::assertSentTo($user, Notifications\ExpenseUpdated::class);
 
         // Test input validation
