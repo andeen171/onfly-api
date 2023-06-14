@@ -3,11 +3,14 @@
 namespace Tests\Feature;
 
 use Tests\TestCase;
-use App\Models\User;
 use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Foundation\Testing\WithFaker;
 // use Illuminate\Foundation\Testing\RefreshDatabase;
+
+use App\Models\User;
+use App\Notifications\ExpenseUpdated;
+use App\Notifications\ExpenseCreated;
 
 class ExpenseTest extends TestCase
 {
@@ -54,7 +57,7 @@ class ExpenseTest extends TestCase
         $response->assertJsonFragment([
             'description' => $expense->description,
             'date' => $expense->date,
-            'value' => number_format($expense->value, 2, '.', ''),
+            'value' => $expense->value,
         ]);
     }
 
@@ -74,7 +77,7 @@ class ExpenseTest extends TestCase
         $response->assertJsonFragment([
             'description' => $expense->description,
             'date' => $expense->date,
-            'value' => number_format($expense->value, 2, '.', ''),
+            'value' => $expense->value,
         ]);
     }
 
@@ -99,7 +102,7 @@ class ExpenseTest extends TestCase
         // Test input validation
         $badExpenseData = [
             'description' => $this->faker->text(192), // Description greater than 191 characters
-            'date' => $this->faker->dateTimeBetween('now', '+2 years')->format('Y-m-d'), // Date on future
+            'date' => $this->faker->dateTimeBetween('now', '+2 years'), // Date on future
             'value' => $this->faker->randomFloat('2', -9999, 0), // Negative value
         ];
 
@@ -144,7 +147,7 @@ class ExpenseTest extends TestCase
         // Test input validation
         $badExpenseData = [
             'description' => $this->faker->text(192), // Description greater than 191 characters
-            'date' => $this->faker->dateTimeBetween('now', '+2 years')->format('Y-m-d'), // Date on future
+            'date' => $this->faker->dateTimeBetween('now', '+2 years'), // Date on future
             'value' => $this->faker->randomFloat('2', -9999, 0), // Negative value
         ];
 
