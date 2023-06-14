@@ -4,13 +4,17 @@ namespace Tests\Feature;
 
 use Tests\TestCase;
 use App\Models\User;
+use Illuminate\Foundation\Testing\DatabaseMigrations;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Foundation\Testing\WithFaker;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Mockery\Matcher\Not;
+// use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class ExpenseTest extends TestCase
 {
+    use DatabaseMigrations;
+    use WithFaker;
+    // use RefreshDatabase;  // Way too slow and not needed for these tests
+
     public function test_protected_expense_routes()
     {
         $response = $this->getJson(route('expenses.index'));
@@ -39,9 +43,9 @@ class ExpenseTest extends TestCase
         $user = User::factory()->create();
 
         $expense = $user->expenses()->create([
-            'description' => 'Test Expense',
-            'date' => '2022-01-01',
-            'value' => 100.5,
+            'description' => $this->faker->text(191),
+            'date' => $this->faker->date('Y-m-d', 'now'),
+            'value' => $this->faker->randomFloat(2, 0, 1000)
         ]);
 
         $response = $this->actingAs($user)->getJson(route('expenses.index'));
@@ -59,9 +63,9 @@ class ExpenseTest extends TestCase
         $user = User::factory()->create();
 
         $expense = $user->expenses()->create([
-            'description' => 'Test Expense',
-            'date' => '2022-01-01',
-            'value' => 100.5,
+            'description' => $this->faker->text(191),
+            'date' => $this->faker->date('Y-m-d', 'now'),
+            'value' => $this->faker->randomFloat(2, 0, 1000)
         ]);
 
         $response = $this->actingAs($user)->getJson(route('expenses.show', $expense->id));
@@ -81,16 +85,28 @@ class ExpenseTest extends TestCase
         $user = User::factory()->create();
 
         $expenseData = [
-            'description' => 'Test Expense',
-            'date' => '2022-01-01',
-            'value' => 100.5,
+            'description' => $this->faker->text(191),
+            'date' => $this->faker->date('Y-m-d', 'now'),
+            'value' => $this->faker->randomFloat(2, 0, 1000)
         ];
 
-        $response = $this->actingAs($user)->post(route('expenses.store'), $expenseData);
+        $response = $this->actingAs($user)->postJson(route('expenses.store'), $expenseData);
 
         $response->assertStatus(201);
         $this->assertDatabaseHas('expenses', $expenseData);
         Notification::assertSentTo($user, \App\Notifications\ExpenseCreated::class);
+
+        // Test input validation
+        $badExpenseData = [
+            'description' => $this->faker->text(192), // Description greater than 191 characters
+            'date' => $this->faker->dateTimeBetween('now', '+2 years')->format('Y-m-d'), // Date on future
+            'value' => $this->faker->randomFloat('2', -9999, 0), // Negative value
+        ];
+
+        $response = $this->actingAs($user)->postJson(route('expenses.store'), $badExpenseData);
+
+        $response->assertStatus(422);
+        $this->assertDatabaseMissing('expenses', $badExpenseData);
     }
 
     public function test_update_expense()
@@ -101,16 +117,16 @@ class ExpenseTest extends TestCase
 
 
         $expense = $user->expenses()->create([
-            'description' => 'Test Expense',
-            'date' => '2022-01-01',
-            'value' => 100.5,
+            'description' => $this->faker->text(191),
+            'date' => $this->faker->date('Y-m-d', 'now'),
+            'value' => $this->faker->randomFloat(2, 0, 1000)
         ]);
 
         // Generate expense data
         $expenseData = [
-            'description' => 'Test Expense Updated',
-            'date' => '2022-01-01',
-            'value' => 100.5,
+            'description' => $this->faker->text(191),
+            'date' => $this->faker->date('Y-m-d', 'now'),
+            'value' => $this->faker->randomFloat(2, 0, 1000)
         ];
 
         $anotherUser = User::factory()->create();
@@ -124,6 +140,18 @@ class ExpenseTest extends TestCase
         $response->assertStatus(200);
         $this->assertDatabaseHas('expenses', $expenseData);
         Notification::assertSentTo($user, \App\Notifications\ExpenseUpdated::class);
+
+        // Test input validation
+        $badExpenseData = [
+            'description' => $this->faker->text(192), // Description greater than 191 characters
+            'date' => $this->faker->dateTimeBetween('now', '+2 years')->format('Y-m-d'), // Date on future
+            'value' => $this->faker->randomFloat('2', -9999, 0), // Negative value
+        ];
+
+        $response = $this->actingAs($user)->putJson(route('expenses.update', $expense->id), $badExpenseData);
+
+        $response->assertStatus(422);
+        $this->assertDatabaseMissing('expenses', $badExpenseData);
     }
 
     public function test_delete_expense()
@@ -133,9 +161,9 @@ class ExpenseTest extends TestCase
 
         // Create an expense
         $expense = $user->expenses()->create([
-            'description' => 'Test Expense',
-            'date' => '2022-01-01',
-            'value' => 100.5,
+            'description' => $this->faker->text(191),
+            'date' => $this->faker->date('Y-m-d', 'now'),
+            'value' => $this->faker->randomFloat(2, 0, 1000)
         ]);
 
         $anotherUser = User::factory()->create();
