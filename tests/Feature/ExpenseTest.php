@@ -20,23 +20,18 @@ class ExpenseTest extends TestCase
     public function test_protected_expense_routes()
     {
         $response = $this->getJson(route('expenses.index'));
-
         $response->assertStatus(401);
 
         $response = $this->postJson(route('expenses.store'));
-
         $response->assertStatus(401);
 
         $response = $this->getJson(route('expenses.show', 1));
-
         $response->assertStatus(401);
 
         $response = $this->putJson(route('expenses.update', 1));
-
         $response->assertStatus(401);
 
         $response = $this->deleteJson(route('expenses.destroy', 1));
-
         $response->assertStatus(401);
     }
 
@@ -55,8 +50,8 @@ class ExpenseTest extends TestCase
         $response->assertStatus(200);
         $response->assertJsonFragment([
             'description' => $expense->description,
-            'date' => $expense->date,
-            'value' => (string)$expense->value,
+            'date' => $expense->date->format('Y-m-d'),
+            'value' => number_format($expense->value, 2, '.', ''),
         ]);
     }
 
@@ -75,8 +70,8 @@ class ExpenseTest extends TestCase
         $response->assertStatus(200);
         $response->assertJsonFragment([
             'description' => $expense->description,
-            'date' => $expense->date,
-            'value' => (string)$expense->value,
+            'date' => $expense->date->format('Y-m-d'),
+            'value' => number_format($expense->value, 2, '.', ''),
         ]);
     }
 
@@ -101,7 +96,7 @@ class ExpenseTest extends TestCase
         // Test input validation
         $badExpenseData = [
             'description' => $this->faker->text(192), // Description greater than 191 characters
-            'date' => $this->faker->dateTimeBetween('now', '+2 years'), // Date on future
+            'date' => $this->faker->dateTimeBetween('now', '+2 years')->format('Y-m-d'), // Date on future
             'value' => $this->faker->randomFloat('2', -9999, 0), // Negative value
         ];
 
@@ -146,7 +141,7 @@ class ExpenseTest extends TestCase
         // Test input validation
         $badExpenseData = [
             'description' => $this->faker->text(192), // Description greater than 191 characters
-            'date' => $this->faker->dateTimeBetween('now', '+2 years'), // Date on future
+            'date' => $this->faker->dateTimeBetween('now', '+2 years')->format('Y-m-d'), // Date on future
             'value' => $this->faker->randomFloat('2', -9999, 0), // Negative value
         ];
 
