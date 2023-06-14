@@ -20,7 +20,7 @@ class ExpensePolicy
      */
     public function view(User $user, Expense $expense): bool
     {
-        return $user->exists;
+        return $user->id === $expense->user_id;
     }
 
     /**

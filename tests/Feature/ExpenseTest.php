@@ -36,11 +36,19 @@ class ExpenseTest extends TestCase
         $response->assertStatus(401);
     }
 
-    public function test_getAll_expenses()
+    public function test_get_all_expenses()
     {
         $user = User::factory()->create();
 
         $expense = $user->expenses()->create([
+            'description' => $this->faker->text(191),
+            'date' => $this->faker->date('Y-m-d', 'now'),
+            'value' => $this->faker->randomFloat(2, 0, 1000)
+        ]);
+
+        $anotherUser = User::factory()->create();
+
+        $anotherExpense = $anotherUser->expenses()->create([
             'description' => $this->faker->text(191),
             'date' => $this->faker->date('Y-m-d', 'now'),
             'value' => $this->faker->randomFloat(2, 0, 1000)
@@ -54,6 +62,12 @@ class ExpenseTest extends TestCase
             'date' => $expense->date->format('Y-m-d'),
             'value' => number_format($expense->value, 2, '.', ''),
         ]);
+        // Test that the other user's expense is not returned
+        $response->assertJsonMissing([
+            'description' => $anotherExpense->description,
+            'date' => $anotherExpense->date->format('Y-m-d'),
+            'value' => number_format($anotherExpense->value, 2, '.', ''),
+        ]);
     }
 
     public function test_get_expense()
@@ -65,6 +79,12 @@ class ExpenseTest extends TestCase
             'date' => $this->faker->date('Y-m-d', 'now'),
             'value' => $this->faker->randomFloat(2, 0, 1000)
         ]);
+
+        $anotherUser = User::factory()->create();
+
+        $response = $this->actingAs($anotherUser)->getJson(route('expenses.show', $expense->id));
+
+        $response->assertStatus(403);
 
         $response = $this->actingAs($user)->getJson(route('expenses.show', $expense->id));
 

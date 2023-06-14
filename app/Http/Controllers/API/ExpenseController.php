@@ -21,7 +21,7 @@ class ExpenseController extends Controller
     public function index(): AnonymousResourceCollection
     {
         $this->authorize('viewAny', Expense::class);
-        return ExpenseResource::collection(Expense::all());
+        return ExpenseResource::collection(auth()->user()->expenses);
     }
 
     /**
