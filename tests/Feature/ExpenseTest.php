@@ -9,8 +9,7 @@ use Illuminate\Foundation\Testing\WithFaker;
 // use Illuminate\Foundation\Testing\RefreshDatabase;
 
 use App\Models\User;
-use App\Notifications\ExpenseUpdated;
-use App\Notifications\ExpenseCreated;
+use App\Notifications;
 
 class ExpenseTest extends TestCase
 {
@@ -57,7 +56,7 @@ class ExpenseTest extends TestCase
         $response->assertJsonFragment([
             'description' => $expense->description,
             'date' => $expense->date,
-            'value' => $expense->value,
+            'value' => (string)$expense->value,
         ]);
     }
 
@@ -77,7 +76,7 @@ class ExpenseTest extends TestCase
         $response->assertJsonFragment([
             'description' => $expense->description,
             'date' => $expense->date,
-            'value' => $expense->value,
+            'value' => (string)$expense->value,
         ]);
     }
 
@@ -97,7 +96,7 @@ class ExpenseTest extends TestCase
 
         $response->assertStatus(201);
         $this->assertDatabaseHas('expenses', $expenseData);
-        Notification::assertSentTo($user, \App\Notifications\ExpenseCreated::class);
+        Notification::assertSentTo($user, Notifications\ExpenseCreated::class);
 
         // Test input validation
         $badExpenseData = [
@@ -142,7 +141,7 @@ class ExpenseTest extends TestCase
 
         $response->assertStatus(200);
         $this->assertDatabaseHas('expenses', $expenseData);
-        Notification::assertSentTo($user, \App\Notifications\ExpenseUpdated::class);
+        Notification::assertSentTo($user, Notifications\ExpenseUpdated::class);
 
         // Test input validation
         $badExpenseData = [
