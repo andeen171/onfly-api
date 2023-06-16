@@ -54,7 +54,11 @@ class ExpenseController extends Controller
     public function index(): AnonymousResourceCollection
     {
         $this->authorize('viewAny', Expense::class);
-        return ExpenseResource::collection(auth()->user()->expenses);
+
+        $limit = (int)request()->get('limit', 10);
+
+        $expenses = auth()->user()->expenses()->orderBy('created_at', 'desc')->paginate($limit);
+        return ExpenseResource::collection($expenses);
     }
 
     /**
