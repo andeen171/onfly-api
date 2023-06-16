@@ -6,22 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\ExpenseResource;
 use App\Models\Expense;
 use Illuminate\Auth\Access\AuthorizationException;
-use Illuminate\Http\Request;
 use App\Notifications\ExpenseUpdated;
 use App\Notifications\ExpenseCreated;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
+use App\Http\Requests\ExpenseRequest;
 use OpenApi\Annotations as OA;
 
 /**
- * @OA\Schema(
- *     schema="ExpenseRequest",
- *     title="Expense Request",
- *     required={"description", "date", "value"},
- *     @OA\Property(property="description", type="string", maxLength=191, example="Expense description"),
- *     @OA\Property(property="date", type="string", format="date", example="2022-01-01"),
- *     @OA\Property(property="value", type="number", minimum=0, example=10.99)
- * )
  * @OA\Tag(
  *     name="Expenses",
  *     description="Endpoints for managing expenses"
@@ -39,8 +31,41 @@ class ExpenseController extends Controller
      *         response=200,
      *         description="Successful operation",
      *         @OA\JsonContent(
-     *             type="array",
-     *             @OA\Items(ref="#/components/schemas/ExpenseResource")
+     *             type="object",
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="array",
+     *                 @OA\Items(ref="#/components/schemas/ExpenseResource")
+     *             ),
+     *             @OA\Property(
+     *                 property="links",
+     *                 type="object",
+     *                 @OA\Property(property="first", type="string"),
+     *                 @OA\Property(property="last", type="string"),
+     *                 @OA\Property(property="prev", type="string"),
+     *                 @OA\Property(property="next", type="string")
+     *             ),
+     *             @OA\Property(
+     *                 property="meta",
+     *                 type="object",
+     *                 @OA\Property(property="current_page", type="integer"),
+     *                 @OA\Property(property="from", type="integer"),
+     *                 @OA\Property(property="last_page", type="integer"),
+     *                 @OA\Property(
+     *                     property="links",
+     *                     type="array",
+     *                     @OA\Items(
+     *                         type="object",
+     *                         @OA\Property(property="url", type="string"),
+     *                         @OA\Property(property="label", type="string"),
+     *                         @OA\Property(property="active", type="boolean")
+     *                     )
+     *                 ),
+     *                 @OA\Property(property="path", type="string"),
+     *                 @OA\Property(property="per_page", type="integer"),
+     *                 @OA\Property(property="to", type="integer"),
+     *                 @OA\Property(property="total", type="integer")
+     *             )
      *         )
      *     ),
      *     @OA\Response(
@@ -88,13 +113,9 @@ class ExpenseController extends Controller
      * Store a newly created resource in storage.
      * @throws AuthorizationException
      */
-    public function store(Request $request): ExpenseResource
+    public function store(ExpenseRequest $request): ExpenseResource
     {
-        $validatedData = $request->validate([
-            'description' => 'required|string|max:191',
-            'date' => 'required|date|before_or_equal:today',
-            'value' => 'required|numeric|min:0',
-        ]);
+        $validatedData = $request->validated();
 
         $this->authorize('create', Expense::class);
 
@@ -187,13 +208,9 @@ class ExpenseController extends Controller
      * Update the specified resource in storage.
      * @throws AuthorizationException
      */
-    public function update(Request $request, Expense $expense): ExpenseResource
+    public function update(ExpenseRequest $request, Expense $expense): ExpenseResource
     {
-        $validatedData = $request->validate([
-            'description' => 'required|string|max:191',
-            'date' => 'required|date|before_or_equal:today',
-            'value' => 'required|numeric|min:0',
-        ]);
+        $validatedData = $request->validated();
 
         $this->authorize('update', $expense);
 
